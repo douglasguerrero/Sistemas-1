@@ -1,0 +1,11 @@
+This folder contains the projects and support files that I distributed to students.  OSProjectA.doc through OSProjectF.doc are the assignments, OSProjects.doc is an overview of the assignments, and OSProjectShell.doc is the warmup project.  The directories ProjectA through ProjectE contain assembly language support files that I provided to the students.  floppya.img contains a 3 1/2 disk image of my prototype operating system.  The source code to my prototype is not included (it being the solution to the project), but if you want it please email me at mblack@american.edu
+
+To run this you will need to install Bochs.  Then, from a terminal, type bochs -f opsys.bxrc
+
+To do this project, you will need a Linux machine and the following tools:
+- Bochs
+- bin86 toolset: as86, ld86, bcc
+- hexedit
+- nasm
+
+--Michael Black, 3/9/2009
