@@ -4,20 +4,27 @@
 void printString(char* string);
 void readString(char* input);
 void printEndOfLine();
+void handleInterrupt21(int ax, int bx, int cx, int dx);
 
-main()
+int main()
 {
-	
+	//char buffer[512];
 	//char input[80];
 	//makeInterrupt21();
 	
 	//printString("Enter4");
 	//readString(input);
 
-	char buffer[512];
-	//interrupt21(2,buffer,30);
-	readSector(buffer,30);
-	printString(buffer);
+	//interrupt21(1,buffer,0,0);
+	//interrupt21(0,buffer,0,0);
+	//interrupt21(2,buffer,30,0);
+	//readSector(buffer,30);
+	//printString(buffer);
+	
+	makeInterrupt21();
+	loadProgram();
+
+	return 0;
 	
 }
 
@@ -61,6 +68,26 @@ void printEndOfLine()
 {
 	putChar('\r');
 	putChar('\n');
+}
+
+void handleInterrupt21(int ax, int bx, int cx, int dx) {
+        switch(ax){
+    		case 0  :
+       			printString(bx);
+       		break;
+    		
+		case 1  :
+       			readString(bx);
+       		break;
+		
+		case 2  :
+       			readSector(bx,cx);
+       		break;
+  
+    		default : 
+       		printString("Error command not found");
+		break;
+		}   
 }
 
 

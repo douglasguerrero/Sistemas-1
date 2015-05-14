@@ -9,6 +9,13 @@
 	.global _readSector
 	.global _makeInterrupt21
 	.global _interrupt21
+	.extern _handleInterrupt21
+	.global _callPrintString
+	.global _callReadString
+	.global _callReadSector
+	.global _loadProgram
+	.extern _printString
+	.extern _readString
 
 ;void readSector();
 _readSector:
@@ -48,15 +55,15 @@ _readSector:
 	mov dl, #0
 	
 	int 0x13
-
+	
+	add sp, #6
 	pop bp
-	ret	
+	ret
 
 ;void putChar(char c);
 _putChar:
 	push bp
 	mov bp,sp
-	push ds
 	mov al, [bp+4]
 	mov ah, #0x0e
 	int 0x10
@@ -70,7 +77,6 @@ _putChar:
 	mov ah, #0x0e
 	int 0x10
 return:
-	pop ds
 	pop bp
 	ret
 
@@ -83,8 +89,7 @@ _readChar:
 	int 0x16
 	pop ds
 	pop bp
-	ret
-	
+	ret	
 
 ;void putInMemory (int segment, int address, char character)
 _putInMemory:
@@ -116,13 +121,11 @@ _makeInterrupt21:
 _interrupt21:
 	push bp
 	mov bp,sp
-	push ds
-	mov ax, #2
+	mov ax, [bp+4]
 	mov bx, [bp+6]
 	mov cx, [bp+8]
-	mov dx, #0
-	int #0x21
-	pop ds
+	mov dx, [bp+10]
+	int 0x21
 	pop bp
 	ret
 
@@ -139,12 +142,42 @@ _interrupt21ServiceRoutine:
 	pop dx
 	iret
 
-_handleInterrupt21:
-	mov ax, #2
-	mov bx, [bp+4]
-	mov cx, [bp+6]
-	mov dx, #0
+_callPrintString:
+	push bx
+	call _printString
+	add sp, #2
+	iret
+
+_callReadString:
+	push bx
+	call _readString
+	add sp, #2
+	iret
+
+_callReadSector:
+	push cx
+	push bx
 	call _readSector
-	ret
+	add sp, #4
+	iret
+
+;void loadProgram();
+_loadProgram:
+	mov ax, #0x2000
+	mov ds, ax
+	mov ss, ax
+	mov es, ax
+	mov ax, #0xfff0 ;let's have the stack start at 0x2000:fff0
+	mov sp, ax
+	mov bp, ax  ; Read the program from the floppy
+	mov cl, #12 ;cl holds sector number
+	mov dh, #0 ;dh holds head number - 0
+	mov ch, #0 ;ch holds track number - 0
+	mov ah, #2 ;absolute disk read
+	mov al, #1 ;read 1 sector
+	mov dl, #0 ;read from floppy disk A
+	mov bx, #0 ;read into offset 0 (in the segment)
+	int #0x13 ;call BIOS disk read function
+	jmp #0x2000:#0 ; Switch to program
 
 
