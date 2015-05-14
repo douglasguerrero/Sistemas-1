@@ -7,13 +7,17 @@ void printEndOfLine();
 
 main()
 {
+	
 	//char input[80];
-	//printString("Enter a line: ");
+	//makeInterrupt21();
+	
+	//printString("Enter4");
 	//readString(input);
 
 	char buffer[512];
+	//interrupt21(2,buffer,30);
 	readSector(buffer,30);
-	printString("hola");
+	printString(buffer);
 	
 }
 

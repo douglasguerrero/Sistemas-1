@@ -7,47 +7,48 @@
 	.global _putChar
 	.global _readChar
 	.global _readSector
+	.global _makeInterrupt21
+	.global _interrupt21
 
 ;void readSector();
 _readSector:
 
 	push bp
 	mov bp,sp
-	push ds
+	sub sp, #6
 
 	mov ax, [bp+6]
 	mov cl, #36
 	div cl
-	mov [bp+8], #0
+	xor ah, ah
+	mov [bp-2], ax
 
-	;relative
-	mov dl, #0     
+	;relative    
 	mov ax, [bp+6]
-	mov cx, #18
-	div cx
-	inc dl
-	mov [bp+10],#13
+	mov cl, #18
+	div cl
+	inc ah
+	mov al, ah
+	xor ah, ah
+	mov [bp-4], ax
 
-	mov dl, #0 
 	mov ax, [bp+6]
-	mov cx, #18
-	div cx
+	mov cl, #18
+	div cl
 	and al, #1
-	xor dx, dx
-	mov dl, al
-	mov [bp+12],#1
+	xor ah, ah
+	mov [bp-6],ax
 
 	mov ah, #2
 	mov al, #1
 	mov bx, [bp+4]
-	mov ch, [bp+8]
-	mov cl, [bp+10]
-	mov dh, [bp+12]
+	mov ch, [bp-2]
+	mov cl, [bp-4]
+	mov dh, [bp-6]
 	mov dl, #0
 	
 	int 0x13
 
-	pop ds
 	pop bp
 	ret	
 
@@ -97,6 +98,53 @@ _putInMemory:
 	mov [si],cl
 	pop ds
 	pop bp
+	ret
+
+_makeInterrupt21:
+	;get the address of the service routine
+	mov dx,#_interrupt21ServiceRoutine
+	push ds
+	mov ax, #0	;interrupts are in lowest memory
+	mov ds,ax
+	mov si,#0x84	;interrupt 0x21 vector (21 * 4 = 84)
+	mov ax,cs	;have interrupt go to the current segment
+	mov [si+2],ax
+	mov [si],dx	;set up our vector
+	pop ds
+	ret
+
+_interrupt21:
+	push bp
+	mov bp,sp
+	push ds
+	mov ax, #2
+	mov bx, [bp+6]
+	mov cx, [bp+8]
+	mov dx, #0
+	int #0x21
+	pop ds
+	pop bp
+	ret
+
+;void handleInterrupt21 (int AX, int BX, int CX, int DX)
+_interrupt21ServiceRoutine:
+	push dx
+	push cx
+	push bx
+	push ax
+	call _handleInterrupt21
+	pop ax
+	pop bx
+	pop cx
+	pop dx
+	iret
+
+_handleInterrupt21:
+	mov ax, #2
+	mov bx, [bp+4]
+	mov cx, [bp+6]
+	mov dx, #0
+	call _readSector
 	ret
 
 
